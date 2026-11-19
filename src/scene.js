@@ -1,33 +1,40 @@
 import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
 import fragment from "./shader/fragment.glsl";
 import vertex from "./shader/vertex.glsl";
 
 let container;
-let camera, scene, renderer, timer;
+let camera, controls, scene, renderer, timer;
 let uniforms;
 
 init();
 animate();
 
 function init() {
-  //Scene container
   container = document.getElementById("app");
 
-  // Camera
-  camera = new THREE.Camera();
-  camera.position.z = 1;
+  // Render
+  renderer = new THREE.WebGLRenderer();
+  renderer.setPixelRatio(window.devicePixelRatio);
+  container.appendChild(renderer.domElement);
+
+  // Scene
+  camera = new THREE.PerspectiveCamera(
+    45,
+    window.innerWidth / window.innerHeight,
+    0.1,
+    1000,
+  );
+  camera.position.set(0, 0, 12);
+
+  controls = new OrbitControls(camera, renderer.domElement);
 
   scene = new THREE.Scene();
   timer = new THREE.Timer();
 
   // Add objects
   addObjects();
-
-  // Render
-  renderer = new THREE.WebGLRenderer();
-  renderer.setPixelRatio(window.devicePixelRatio);
-  container.appendChild(renderer.domElement);
 
   // Handle window resize
   onWindowResize();
@@ -52,7 +59,8 @@ function addObjects() {
     uniforms: uniforms,
     vertexShader: vertex,
     fragmentShader: fragment,
-    wireframe: true,
+    //wireframe: true,
+    //transparent: true,
   });
 
   const mesh = new THREE.Mesh(geometry, material);
@@ -60,6 +68,9 @@ function addObjects() {
 }
 
 function onWindowResize(event) {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+
   renderer.setSize(window.innerWidth, window.innerHeight);
   uniforms.u_resolution.value.x = renderer.domElement.width;
   uniforms.u_resolution.value.y = renderer.domElement.height;
@@ -67,6 +78,7 @@ function onWindowResize(event) {
 
 function animate() {
   requestAnimationFrame(animate);
+  controls.update();
   render();
 }
 
